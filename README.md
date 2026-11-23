@@ -13,4 +13,5 @@ AI-assisted live cricket umpire and scorer for gully cricket.
 ```bash
 npm install
 npm test
+npm run dev --workspace @gully/web
 ```

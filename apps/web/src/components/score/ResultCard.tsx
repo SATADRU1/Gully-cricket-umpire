@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { pushMatch } from '../../lib/cloud';
+import { db } from '../../lib/db';
+import type { SavedMatch } from '../../lib/db';
 import { configFor } from '../../lib/match';
 import type { MatchView } from '../../lib/match';
-import { db } from '../../lib/db';
 import { useStore } from '../../lib/store';
 import type { LiveMatch } from '../../lib/types';
 import Scorecard from './Scorecard';
@@ -13,7 +15,7 @@ export default function ResultCard({ match, view }: { match: LiveMatch; view: Ma
   const { setup } = match;
 
   const save = async () => {
-    await db.matches.put({
+    const saved: SavedMatch = {
       id: setup.id,
       playedAt: Date.now(),
       resultSummary: view.result?.summary ?? 'No result',
@@ -23,7 +25,9 @@ export default function ResultCard({ match, view }: { match: LiveMatch; view: Ma
         config: configFor(setup, i, i === 1 ? view.config.target : undefined),
         events: r.events,
       })),
-    });
+    };
+    await db.matches.put(saved); // always saved on this device first
+    await pushMatch(saved); // then the cloud, if signed in. Never blocks or fails the save.
     discardMatch();
     navigate('/stats');
   };
